@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Modal de Selección</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+
+
+</head>
+
+<body>
+    <!-- MODAL PARA SELECCIONAR FORMATO DE ARCHIVO (ANTERIOR O NUEVO) -->
+
+    <!-- Modal -->
+    <div class="modal fade" id="selectionModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Selecciona una opción</h1>
+                    <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> -->
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="optionSelect" style="margin-bottom: 20px;">Tipo de formato</label>
+                            <select class="form-control" id="optionSelect">
+                                <option value="">Seleccione una opción</option>
+                                <option value="version1">Formato anterior a 2024</option>
+                                <option value="version2">Formato 2024 </option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ADVERTENCIA DE FORMATO ERRONEO -->
+    <div class="modal fade" id="wrongFormatFile" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="staticBackdropLabel">¡Alerta de Formato!</h1>
+                </div>
+                <div class="modal-body">
+                    El archivo seleccionado no tiene el formato adecuado para la carga. Favor de seleccionar un archivo
+                    y corroborar que sea formato nuevo o anterior segun corresponda.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal"
+                        onclick="cleanTable()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTÓN FLOTANTE PARA ABRIR MODAL DE SELECCIÓN -->
+    <button type="button" class="btn btn-primary floating-button" id="openSelectionModalBtn"
+        style="display: none;">Cambiar Selección</button>
+
+    <!-- BOTÓN FLOTANTE PARA GUARDAR LA INFORMACIÓN (inferior) -->
+    <button type="button" id="submit" class="btn btn-success bottom-right" onclick="saveInfo()">Guardar
+        Información</button>
+
+    <div class="versionScript floating-version" style="display: inline-block; margin-left: auto;">
+        <div class="item float-right">
+            <div class="tooltip-wrapper">
+                <img src="version.png" class="img-ver" alt="Descripción de la imagen" data-toggle="tooltip"
+                    title="Versión 0.0.2">
+            </div>
+        </div>
+    </div>
+
+    <div id="progress-bar-indicator" class="floating-progress-bar">
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;"
+                aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">100% Completado</div>
+        </div>
+    </div>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <h3>Subir Archivo CFE (xlsx)</h3>
+                <form>
+                    <div class="form-group">
+                        <div class="custom-file">
+                            <div class="mb-3">
+                                <input class="form-control" type="file" id="excelFile" accept=".xlsx"
+                                    onchange="validateFile()" onclick="cleanTable()">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- CODIGO SPINNER -->
+        <div class="container mt-2">
+            <div class="row">
+                <div class="col-md-6 offset-md-6">
+                    <form>
+                        <div class="form-group">
+                            <div id="mainLoader" class="loader" style="display: none;">
+                                <div class="spinner-border text-dark" role="status">
+                                    <!-- <span class="sr-only">Cargando...</span> -->
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mt-1">
+            <div class="row">
+                <div class="col-md-12">
+                    <form>
+                        <div class="form-group">
+                            <div class="table-responsive" style="margin-bottom: 15px;">
+                                <span></span><br /><br />
+                                <div id="loader">
+
+                                </div>
+                                <div id="message">
+
+                                </div>
+                                <table id="tbl-data" class="table table-bordered">
+                                    <!-- Contenido de la tabla se generará dinámicamente -->
+                                </table>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/read-excel-file@5.x/bundle/read-excel-file.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <script src="fetchToService.js.js"></script>
+    <script src="formatoAnterior.js"></script>
+    <script src="formatoNuevo.js"></script>
+    <script src="utils.js"></script>
+
+    <script>
+
+        // Codigo para tooltip
+        $(document).ready(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+
+        // Declaración de variables globales
+        var table = document.getElementById("tbl-data");
+        var contenidoOriginal = $('#message').html();
+        let selectedOption = '';  // Almacena la opción seleccionada por el usuario
+        let fechaSeleccionada = '';
+        let inputFile = document.getElementById('excelFile'); // Input de archivo
+        let globalArray = [];
+        let finalDataArray = [];
+        let arrayAPI = [];
+        let successCount = 0;
+        document.getElementById("submit").disabled = true; // Inicialmente deshabilita el botón de guardar
+
+
+        if (inputFile.files.length == 0) {
+            document.getElementById("submit").disabled = true;
+        }
+
+        // -------------------------------------------------------------------
+
+        // Acciones adicionales cuando el documento está listo
+        $(document).ready(function () {
+            $('#selectionModal').modal({ backdrop: 'static', keyboard: false });
+
+            $('#selectionModal').on('hidden.bs.modal', function () {
+                $('.floating-button').show();
+                $('.bottom-right').show();
+            });
+
+            $('#selectionModal').on('show.bs.modal', function () {
+                $('.floating-button').hide();
+                $('.bottom-right').hide();
+            });
+
+            $('#openSelectionModalBtn').click(function () {
+                $('#selectionModal').modal('show');
+                $('.floating-button').hide();
+                $('.bottom-right').hide();
+                resetParamsButton();
+            });
+
+            $('#selectionModal').modal('show');
+
+            $('#optionSelect').change(function () {
+                selectedOption = $(this).val();
+                if (selectedOption) {
+                    console.log('Opción seleccionada:', selectedOption);
+
+                    if (selectedOption == 'oldFormat') {
+                        $('#extraOptionsContainer').show(); // Mostrar opciones extras
+                    } else {
+                        $('#extraOptionsContainer').hide(); // Ocultar opciones extras
+                    }
+
+                    $('#selectionModal').modal('hide');
+                }
+            });
+
+            // Escuchar los cambios en los switches y mostrar el estado en la consola
+            $('.extra-switch').change(function () {
+                let switchId = $(this).attr('id');
+                let switchValue = $(this).val();
+                let isChecked = $(this).is(':checked');
+                console.log(`Switch ${switchValue} (${switchId}) is now ${isChecked ? 'ON' : 'OFF'}`);
+            });
+        });
+
+        // Asegúrate de definir `inputFile` correctamente
+        var loader = document.getElementById('mainLoader'); // Obtener el elemento del loader
+
+        document.getElementById('excelFile').addEventListener('change', function (e) {
+            var inputFile = e.target;
+            loader.style.display = 'block'; // Mostrar el indicador de carga
+            // var loader = document.getElementById('loader');
+
+
+            // Leer el archivo usando readXlsxFile (asegúrate de que esta función esté definida e importada)
+            readXlsxFile(inputFile.files[0]).then(function (data) {
+
+                let flagFormato = checkFormat(data);
+                console.log("index", flagFormato)
+                console.log("index2", typeof (flagFormato))
+                // return
+                // Ejemplo de llamada a funciones según la opción seleccionada
+                if (selectedOption == 'version1') {
+                    formatoAnterior(data); // Llamar a función para formato anterior
+                }
+                if (selectedOption == 'version2') {
+                    formatoNuevo(data); // Llamar a función para formato nuevo
+                }
+            }).catch(function (error) {
+                // Manejar el error si es necesario
+                console.error('Error al leer el archivo:', error);
+                // Ocultar el loader en caso de error
+                loader.style.display = 'none'; // Ocultar el indicador de carga
+            });
+        });
+
+
+
+        function resetParamsButton() {
+            console.log('Reset Params')
+            selectedOption = ''; // Reiniciar la opción seleccionada
+            providerName = '';
+            // Restablecer el valor del select a la opción predeterminada
+            $('#optionSelect').val(''); // Devuelve el select a la opción por defecto
+            resetSwitches();
+            cleanTable();
+        }
+
+        const cleanTable = () => {
+            console.log("Clean Table");
+            document.getElementById("excelFile").value = "";
+            $("#tbl-data tr").remove();
+            $("#tbl-data td").remove();
+            table.innerHTML = '';
+            idProvider = '';
+            fechaSeleccionada = ''
+            globalArray = []
+            finalDataArray = [];
+            arrayAPI = [];
+            $('span').html('');
+            $('#message').html('');
+            loader.style.display = 'none';
+
+        }
+
+        function selectProvider(provider) {
+            idProvider = provider;
+            console.log(idProvider);
+            // $("#tbl-data tr").remove();
+            // $("#tbl-data td").remove();
+        }
+
+        function resetSwitches() {
+            // Obtener todos los switches
+            const switches = document.querySelectorAll('input[name="flexSwitch"]');
+
+            // Desmarcar todos los switches
+            switches.forEach((sw) => {
+                sw.checked = false;
+            });
+
+            // También puedes reiniciar el estado del proveedor seleccionado si es necesario
+            console.log('Todos los switches se han reiniciado.');
+        }
+
+        async function validateFile() {
+            var input = document.getElementById('excelFile');
+            var file = input.files[0];
+            var fileType = file.name.split('.').pop().toLowerCase();
+
+            // Validar solo archivos con extensión .xlsx
+            if (fileType !== 'xlsx') {
+                alert('Solo se permiten archivos con extensión .xlsx');
+
+                // Espera 3 segundos (3000 milisegundos)
+                await delay(100);
+                // input.value = ''; // Limpiar el campo si el archivo no es válido
+                // loader.style.display = 'none';
+                cleanTable();
+            }
+        }
+
+
+        // $(document).ready(function () {
+        //     var targetDiv = $("div:nth-child(2)");
+
+        //     // Mostrar información sobre el div en la consola
+        //     console.log("Div seleccionado:", targetDiv);
+
+        //     // Aplicar un borde para visualizar el div en la página
+        //     targetDiv.css("border", "2px solid red");
+
+        //     // Aplicar la propiedad disabled (aunque no tiene efecto en divs)
+        //     targetDiv.prop("disabled", true);
+
+        //     // Deshabilitar elementos interactivos dentro del div
+        //     targetDiv.find("*").prop("disabled", true);
+        // });
+
+    </script>
+</body>
+
+</html>
